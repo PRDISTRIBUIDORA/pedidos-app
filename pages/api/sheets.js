@@ -1,0 +1,26 @@
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw9Kx5hPdZIFkPuuGJMuttzJt6H_8CAdMwgn7b36qpoEJiqckNfwHO2NmxtB5dnVrL12A/exec";
+
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  try {
+    if (req.method === "GET") {
+      const qs = new URLSearchParams(req.query).toString();
+      const r = await fetch(`${GAS_URL}?${qs}`);
+      const data = await r.json();
+      return res.json(data);
+    }
+    const r = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
+    });
+    const data = await r.json();
+    return res.json(data);
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+}
