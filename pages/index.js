@@ -123,11 +123,23 @@ async function apiPost(action, body = {}) {
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 const today = () => new Date().toLocaleDateString("es-AR");
-const dateOf = (o) => { try { return o.fecha.split(",")[0].trim(); } catch { return o.fecha||""; } };
+const parseFecha = (fechaStr) => {
+  if (!fechaStr) return "";
+  try {
+    const d = new Date(fechaStr);
+    if (!isNaN(d)) return d.toLocaleDateString("es-AR");
+  } catch {}
+  return fechaStr.split(",")[0].trim();
+};
+const dateOf = (o) => parseFecha(o.fecha);
 const groupByDate = (orders) => {
   const map = {};
   orders.forEach(o => { const d = dateOf(o); if (!map[d]) map[d] = []; map[d].push(o); });
-  return Object.entries(map).sort((a,b) => b[0].localeCompare(a[0]));
+  return Object.entries(map).sort((a,b) => {
+    const da = a[0].split("/").reverse().join("-");
+    const db = b[0].split("/").reverse().join("-");
+    return db.localeCompare(da);
+  });
 };
 
 // ── FORM PEDIDO (compartido vendedor y admin) ─────────────────────────────
@@ -619,8 +631,8 @@ function AdminApp({ user, onLogout }) {
             {grouped.map(([date,dayOrders])=>(
               <div key={date} style={{marginBottom:12}}>
                 <button onClick={()=>toggleDate(date)} style={{width:"100%",background:date===todayStr?"#4a148c":"#e8edf5",color:date===todayStr?"#fff":"#555",border:"none",borderRadius:10,padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",fontWeight:700,fontSize:13}}>
-                  <span>{date===todayStr?"📅 Hoy":date} — {dayOrders.length} pedido{dayOrders.length!==1?"s":""}</span>
-                  <span>{isExpanded(date)?"▲":"▼"}</span>
+                  <span style={{textAlign:"left",flex:1}}>{date===todayStr?"📅 Hoy — "+date:date} · {dayOrders.map(o=>o.cliente).join(", ")}</span>
+                  <span style={{marginLeft:8,flexShrink:0}}>{isExpanded(date)?"▲":"▼"}</span>
                 </button>
                 {isExpanded(date)&&dayOrders.map(o=>(
                   <div key={o.id} style={{...cd,borderLeft:`4px solid ${o.estado==="retenido"?"#c62828":o.urgente?"#e53935":"#43a047"}`,marginTop:6}}>
