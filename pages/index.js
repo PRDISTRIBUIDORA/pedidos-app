@@ -121,14 +121,16 @@ async function apiPost(action, body = {}) {
   return r.json();
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────
-const today = () => new Date().toLocaleDateString("es-AR");
+const today = () => {
+  const d = new Date();
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+};
 const parseFecha = (fechaStr) => {
   if (!fechaStr) return "";
-  try {
-    const d = new Date(fechaStr);
-    if (!isNaN(d)) return d.toLocaleDateString("es-AR");
-  } catch {}
+  if (fechaStr.includes("T")) {
+    const p = fechaStr.split("T")[0].split("-");
+    return `${parseInt(p[2])}/${parseInt(p[1])}/${p[0]}`;
+  }
   return fechaStr.split(",")[0].trim();
 };
 const dateOf = (o) => parseFecha(o.fecha);
@@ -136,13 +138,11 @@ const groupByDate = (orders) => {
   const map = {};
   orders.forEach(o => { const d = dateOf(o); if (!map[d]) map[d] = []; map[d].push(o); });
   return Object.entries(map).sort((a,b) => {
-    const da = a[0].split("/").reverse().join("-");
-    const db = b[0].split("/").reverse().join("-");
-    return db.localeCompare(da);
+    const toNum = s => { const p=s.split("/"); return p[2]+p[1].padStart(2,"0")+p[0].padStart(2,"0"); };
+    return toNum(b[0]).localeCompare(toNum(a[0]));
   });
 };
 
-// ── FORM PEDIDO (compartido vendedor y admin) ─────────────────────────────
 function FormPedido({ vendedorName, products, stock, color, onSaved }) {
   const [syncing, setSyncing] = useState(false);
   const [cliente, setCliente] = useState("");
@@ -268,7 +268,6 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
   );
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────────────────
 function Login({ onLogin }) {
   const [showPass, setShowPass] = useState(false);
   const [pass, setPass] = useState(""); const [err, setErr] = useState("");
@@ -306,7 +305,6 @@ function Login({ onLogin }) {
   );
 }
 
-// ── VENDEDOR ──────────────────────────────────────────────────────────────
 function VendedorApp({ user, onLogout }) {
   const [tab, setTab] = useState("nuevo");
   const [orders, setOrders] = useState([]);
@@ -380,7 +378,6 @@ function VendedorApp({ user, onLogout }) {
   );
 }
 
-// ── REPARTIDOR ────────────────────────────────────────────────────────────
 function RepartidorApp({ user, onLogout }) {
   const [orders, setOrders] = useState([]);
   const [tab, setTab] = useState("pendiente");
@@ -405,8 +402,7 @@ function RepartidorApp({ user, onLogout }) {
 
   const updReparto = async(id,estadoReparto,fechaReparto="",transporte="")=>{
     setOrders(prev=>prev.map(o=>o.id===id?{...o,estadoReparto,fechaReparto,transporte}:o));
-    await apiPost("updReparto",{id,estadoReparto,fechaReparto});
-    if(transporte) await apiPost("updateOrder",{...orders.find(o=>o.id===id),estadoReparto,fechaReparto,transporte});
+    await apiPost("updReparto",{id,estadoReparto,fechaReparto,transporte});
     setModalOrder(null); setShowTransporte(null); setTransporteSel("");
   };
 
@@ -480,7 +476,6 @@ function RepartidorApp({ user, onLogout }) {
   );
 }
 
-// ── ADMIN ─────────────────────────────────────────────────────────────────
 function AdminApp({ user, onLogout }) {
   const [tab, setTab] = useState("pedidos");
   const [orders, setOrders] = useState([]);
@@ -597,7 +592,6 @@ function AdminApp({ user, onLogout }) {
   const allP = products.length>0?products:INIT_PRODUCTS;
   const filtProd = allP.filter(p=>{const mP=prov==="TODOS"||p.proveedor===prov;const q=search.toLowerCase();return mP&&(!q||p.nombre.toLowerCase().includes(q)||p.codigo.toLowerCase().includes(q));});
 
-  // Filtrar y agrupar pedidos por fecha
   const filtOrders = filterEstado==="todos"?orders:orders.filter(o=>o.estado===filterEstado);
   const grouped = groupByDate(filtOrders);
   const todayStr = today();
@@ -614,10 +608,8 @@ function AdminApp({ user, onLogout }) {
       <Tabs tabs={["pedidos","nuevo","articulos","stock"]} labels={[`📋 Pedidos${pendientes>0?` (${pendientes})`:""}`, "➕ Nuevo pedido","📦 Artículos","📊 Stock"]} active={tab} onChange={setTab} color={color}/>
 
       <div style={{padding:16}}>
-        {/* NUEVO PEDIDO */}
         {tab==="nuevo"&&<FormPedido vendedorName={user.name} products={products} stock={stock} color={color} onSaved={()=>{refresh();setTab("pedidos");}}/>}
 
-        {/* PEDIDOS */}
         {tab==="pedidos"&&(
           <div>
             <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
@@ -662,7 +654,6 @@ function AdminApp({ user, onLogout }) {
           </div>
         )}
 
-        {/* ARTÍCULOS */}
         {tab==="articulos"&&(
           <div>
             <div style={{display:"flex",gap:8,marginBottom:12}}>
@@ -720,7 +711,6 @@ function AdminApp({ user, onLogout }) {
           </div>
         )}
 
-        {/* STOCK */}
         {tab==="stock"&&(
           <div>
             <button onClick={()=>setShowStockImport(!showStockImport)} style={{...bP("#1565c0"),marginBottom:12}}>📥 Importar stock desde Excel</button>
@@ -756,7 +746,6 @@ function AdminApp({ user, onLogout }) {
         )}
       </div>
 
-      {/* MODAL EDITAR PEDIDO */}
       {editOrder&&(
         <Modal onClose={()=>setEditOrder(null)}>
           <h3 style={{marginTop:0,color}}>✏️ Editar pedido</h3>
@@ -788,7 +777,6 @@ function AdminApp({ user, onLogout }) {
   );
 }
 
-// ── COMPONENTES ───────────────────────────────────────────────────────────
 function Header({ user, syncing, lastSync, onLogout }) {
   return (
     <div style={{background:user.color,color:"#fff",padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
