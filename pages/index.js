@@ -172,7 +172,7 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
     await apiPost("addPedido", o);
     setShowRes(o); setCliente(""); setPromo(""); setItems([]); setUrgente(false); setTipo("pedido"); setSearch(""); setProv("TODOS");
     setSyncing(false);
-    onSaved && onSaved();
+  
   };
 
   const txtWA = o => {
@@ -261,7 +261,7 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
               📱 Mandar por WhatsApp
             </a>
           )}
-          <button onClick={()=>{setShowRes(null);}} style={{...bP(color),marginBottom:8}}>➕ Cargar otro pedido</button>
+          <button onClick={()=>{setShowRes(null);onSaved&&onSaved();}} style={{...bP(color),marginBottom:8}}>➕ Cargar otro pedido</button>
         </Modal>
       )}
     </div>
