@@ -255,7 +255,7 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
         <Modal onClose={()=>setShowRes(null)}>
           <h3 style={{marginTop:0,color}}>✅ {showRes.tipo.charAt(0).toUpperCase()+showRes.tipo.slice(1)} guardado</h3>
           <p style={{fontSize:13,color:"#555"}}>Cliente: <b>{showRes.cliente}</b> · Total: <b>${showRes.total.toLocaleString("es-AR")}</b></p>
-          {showRes.tipo==="presupuesto"&&(
+          {(showRes.tipo==="presupuesto"||showRes.tipo==="pedido")&&(
             <a href={`https://wa.me/?text=${encodeURIComponent(txtWA(showRes))}`} target="_blank" rel="noreferrer"
               style={{display:"block",textAlign:"center",background:"#25D366",color:"#fff",borderRadius:10,padding:"14px 0",textDecoration:"none",fontWeight:700,marginBottom:8}}>
               📱 Mandar por WhatsApp
