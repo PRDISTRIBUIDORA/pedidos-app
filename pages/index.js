@@ -605,7 +605,7 @@ function AdminApp({ user, onLogout }) {
       <Header user={user} lastSync={lastSync} onLogout={onLogout}/>
       <Tabs tabs={["pedidos","nuevo","articulos","stock"]} labels={[`📋 Pedidos${pendientes>0?` (${pendientes})`:""}`, "➕ Nuevo pedido","📦 Artículos","📊 Stock"]} active={tab} onChange={setTab} color={color}/>
       <div style={{padding:16}}>
-        {tab==="nuevo"&&<FormPedido vendedorName={user.name} products={products} stock={stock} color={color} onSaved={()=>{refresh();setTab("pedidos");}}/>}
+        {tab==="nuevo"&&<FormPedido vendedorName={user.name} products={products} stock={stock} color={color} onSaved={refresh}/>}
         {tab==="pedidos"&&(
           <div>
             <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
