@@ -522,24 +522,15 @@ function AdminApp({ user, onLogout }) {
     await apiPost("deleteOrder",{id});
   };
 
-  const saveOrderEdit = async()=>{
+ const saveOrderEdit = async()=>{
     if(!editOrder) return;
     setSaving(true);
-    const res = await apiPost("updateOrder",editOrder);
-    if(res && res.error){
-      alert("❌ Error al guardar: " + res.error);
-      setSaving(false);
-      return;
-    }
     setOrders(prev=>prev.map(o=>o.id===editOrder.id?editOrder:o));
     setEditOrder(null);
     setSaving(false);
+    const res = await apiPost("updateOrder",editOrder);
+    if(res && res.error) alert("❌ Error al guardar: " + res.error);
   };
-
-  const saveStock = async()=>{
-    setSaving(true);
-    const m={...stock};
-    Object.entries(stockInput).forEach(([k,v])=>{if(v!=="") m[k]=parseInt(v)||0;});
     await apiPost("saveStock",m);
     setStock(m);setStockInput({});
     setSaving(false);alert("✅ Stock guardado");
