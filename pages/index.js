@@ -172,7 +172,6 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
     await apiPost("addPedido", o);
     setShowRes(o); setCliente(""); setPromo(""); setItems([]); setUrgente(false); setTipo("pedido"); setSearch(""); setProv("TODOS");
     setSyncing(false);
-  
   };
 
   const txtWA = o => {
@@ -215,7 +214,7 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
             return (
               <div key={p.id} onClick={()=>addItem(p)} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"8px 10px",borderRadius:8,marginBottom:4,background:"#f8fafc",cursor:"pointer",border:"1px solid #e8edf5"}}>
                 <div style={{flex:1,minWidth:0,marginRight:8}}>
-                  <b style={{fontSize:12,display:"block",lineHeight:1.4}}>{p.nombre}</b>
+                  <b style={{fontSize:12,display:"block",lineHeight:1.4,wordBreak:"break-word"}}>{p.nombre}</b>
                   <div style={{fontSize:10,color:"#888"}}>{p.codigo} · {p.proveedor}{st!==undefined?` · Stock: ${st}`:""}</div>
                 </div>
                 <div style={{textAlign:"right",flexShrink:0}}>
@@ -234,7 +233,7 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
           {items.map(i=>(
             <div key={i.id} style={{display:"flex",alignItems:"center",gap:8,marginTop:8,padding:"8px",background:"#f0f4ff",borderRadius:8}}>
               <div style={{flex:1,minWidth:0}}>
-                <b style={{fontSize:12,display:"block",lineHeight:1.4}}>{i.nombre}</b>
+                <b style={{fontSize:12,display:"block",lineHeight:1.4,wordBreak:"break-word"}}>{i.nombre}</b>
                 <span style={{color:"#888",fontSize:11}}>${i.precio.toLocaleString("es-AR")} c/u</span>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -252,15 +251,13 @@ function FormPedido({ vendedorName, products, stock, color, onSaved }) {
         </div>
       )}
       {showRes&&(
-        <Modal onClose={()=>setShowRes(null)}>
+        <Modal onClose={()=>{setShowRes(null);onSaved&&onSaved();}}>
           <h3 style={{marginTop:0,color}}>✅ {showRes.tipo.charAt(0).toUpperCase()+showRes.tipo.slice(1)} guardado</h3>
           <p style={{fontSize:13,color:"#555"}}>Cliente: <b>{showRes.cliente}</b> · Total: <b>${showRes.total.toLocaleString("es-AR")}</b></p>
-          {(showRes.tipo==="presupuesto"||showRes.tipo==="pedido")&&(
-            <a href={`https://wa.me/?text=${encodeURIComponent(txtWA(showRes))}`} target="_blank" rel="noreferrer"
-              style={{display:"block",textAlign:"center",background:"#25D366",color:"#fff",borderRadius:10,padding:"14px 0",textDecoration:"none",fontWeight:700,marginBottom:8}}>
-              📱 Mandar por WhatsApp
-            </a>
-          )}
+          <a href={`https://wa.me/?text=${encodeURIComponent(txtWA(showRes))}`} target="_blank" rel="noreferrer"
+            style={{display:"block",textAlign:"center",background:"#25D366",color:"#fff",borderRadius:10,padding:"14px 0",textDecoration:"none",fontWeight:700,marginBottom:8}}>
+            📱 Mandar por WhatsApp
+          </a>
           <button onClick={()=>{setShowRes(null);onSaved&&onSaved();}} style={{...bP(color),marginBottom:8}}>➕ Cargar otro pedido</button>
         </Modal>
       )}
@@ -522,7 +519,7 @@ function AdminApp({ user, onLogout }) {
     await apiPost("deleteOrder",{id});
   };
 
- const saveOrderEdit = async()=>{
+  const saveOrderEdit = async()=>{
     if(!editOrder) return;
     setSaving(true);
     setOrders(prev=>prev.map(o=>o.id===editOrder.id?editOrder:o));
@@ -531,6 +528,11 @@ function AdminApp({ user, onLogout }) {
     const res = await apiPost("updateOrder",editOrder);
     if(res && res.error) alert("❌ Error al guardar: " + res.error);
   };
+
+  const saveStock = async()=>{
+    setSaving(true);
+    const m={...stock};
+    Object.entries(stockInput).forEach(([k,v])=>{if(v!=="") m[k]=parseInt(v)||0;});
     await apiPost("saveStock",m);
     setStock(m);setStockInput({});
     setSaving(false);alert("✅ Stock guardado");
@@ -690,7 +692,7 @@ function AdminApp({ user, onLogout }) {
               <div key={p.id} style={{...cd,padding:"8px 12px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                   <div style={{flex:1,minWidth:0,marginRight:8}}>
-                    <b style={{fontSize:12,display:"block",lineHeight:1.4}}>{p.nombre}</b>
+                    <b style={{fontSize:12,display:"block",lineHeight:1.4,wordBreak:"break-word"}}>{p.nombre}</b>
                     <div style={{fontSize:10,color:"#888"}}>{p.codigo} · {p.proveedor}</div>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
@@ -726,7 +728,7 @@ function AdminApp({ user, onLogout }) {
               {filtProd.slice(0,60).map(p=>(
                 <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <div style={{flex:1,minWidth:0}}>
-                    <b style={{fontSize:12,display:"block",lineHeight:1.4}}>{p.nombre}</b>
+                    <b style={{fontSize:12,display:"block",lineHeight:1.4,wordBreak:"break-word"}}>{p.nombre}</b>
                     <div style={{fontSize:10,color:"#888"}}>Actual: {stock[p.codigo]??stock[p.id]??"—"}</div>
                   </div>
                   <input type="number" placeholder="Cant." value={stockInput[p.codigo]??""} onChange={e=>setStockInput({...stockInput,[p.codigo]:e.target.value})} style={{width:70,padding:"6px 8px",borderRadius:8,border:"1px solid #ddd",fontSize:13}}/>
